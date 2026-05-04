@@ -4,7 +4,7 @@
 
 An LLM-based system is often granted a degree of agency by its developer - the ability to call functions or interface with other systems via extensions (sometimes referred to as tools, skills or plugins by different vendors) to undertake actions in response to a prompt. The decision over which extension to invoke may also be delegated to an LLM 'agent' to dynamically determine based on input prompt or LLM output. Agent-based systems will typically make repeated calls to an LLM using output from previous invocations to ground and direct subsequent invocations.
 
-Excessive Agency is the vulnerability that enables damaging actions to be performed in response to unexpected, ambiguous or manipulated outputs from an LLM, regardless of what is causing the LLM to malfunction. Common triggers include:
+Excessive Agency refers to situations where an LLM-based system performs actions that exceed its intended scope or permissions. Excessive Agency is the vulnerability that enables damaging actions to be performed in response to unexpected, ambiguous or manipulated outputs from an LLM, regardless of what is causing the LLM to malfunction. Common triggers include:
 
 * hallucination/confabulation caused by poorly-engineered benign prompts, or just a poorly-performing/misaligned model;
 * direct/indirect prompt injection from a malicious user, an earlier invocation of a malicious/compromised extension, or (in multi-agent/collaborative systems) a malicious/compromised peer agent.
@@ -23,27 +23,21 @@ Note: Excessive Agency differs from Insecure Output Handling which is concerned 
 
 #### 1. Excessive Functionality
 
-  An LLM agent has access to extensions which include functions that are not needed for the intended operation of the system. For example, a developer needs to grant an LLM agent the ability to read documents from a repository, but the 3rd-party extension they choose to use also includes the ability to modify and delete documents.
+  1a. An LLM agent has access to extensions which include functions that are not needed for the intended operation of the system. For example, a developer needs to grant an LLM agent the ability to read documents from a repository, but the 3rd-party extension they choose to use also includes the ability to modify and delete documents.
 
-#### 2. Excessive Functionality
+  1b. An extension may have been trialled during a development phase and dropped in favor of a better alternative, but the original plugin remains available to the LLM agent.
 
-  An extension may have been trialled during a development phase and dropped in favor of a better alternative, but the original plugin remains available to the LLM agent.
+  1c. An LLM plugin with open-ended functionality fails to properly filter the input instructions for commands outside what's necessary for the intended operation of the application. E.g., an extension to run one specific shell command fails to properly prevent other shell commands from being executed.
 
-#### 3. Excessive Functionality
+#### 2. Excessive Permissions
 
-  An LLM plugin with open-ended functionality fails to properly filter the input instructions for commands outside what's necessary for the intended operation of the application. E.g., an extension to run one specific shell command fails to properly prevent other shell commands from being executed.
+  2a. An LLM extension has permissions on downstream systems that are not needed for the intended operation of the application. E.g., an extension intended to read data connects to a database server using an identity that not only has SELECT permissions, but also UPDATE, INSERT and DELETE permissions.
 
-#### 4. Excessive Permissions
+  2b. An LLM extension that is designed to perform operations in the context of an individual user accesses downstream systems with a generic high-privileged identity. E.g., an extension to read the current user's document store connects to the document repository with a privileged account that has access to files belonging to all users.
 
-  An LLM extension has permissions on downstream systems that are not needed for the intended operation of the application. E.g., an extension intended to read data connects to a database server using an identity that not only has SELECT permissions, but also UPDATE, INSERT and DELETE permissions.
+#### 3. Excessive Autonomy
 
-#### 5. Excessive Permissions
-
-  An LLM extension that is designed to perform operations in the context of an individual user accesses downstream systems with a generic high-privileged identity. E.g., an extension to read the current user's document store connects to the document repository with a privileged account that has access to files belonging to all users.
-
-#### 6. Excessive Autonomy
-
-  An LLM-based application or extension fails to independently verify and approve high-impact actions. E.g., an extension that allows a user's documents to be deleted performs deletions without any confirmation from the user.
+  3a. An LLM-based application or extension fails to independently verify and approve high-impact actions. E.g., an extension that allows a user's documents to be deleted performs deletions without any confirmation from the user.
 
 ### Prevention and Mitigation Strategies
 
@@ -86,8 +80,8 @@ The following options will not prevent Excessive Agency, but can limit the level
 #### 9. Monitor extension use
   Log and monitor the activity of LLM extensions and downstream systems to identify where undesirable actions are taking place, and respond accordingly.
 
-#### 10. Rate limiting
-  Establish thresholds around the invocation of extensions and implement circuit breakers that halt, rate-limit or escalate for human review if those thresholds are exceeded. Simple thresholds could be based on the number of invocations, whereas context-aware thresholds could be based on the cumulative value of an input parameter to an extension. 
+#### 10. Rate limiting and context window scopiong
+  Establish thresholds around the invocation of extensions and implement circuit breakers that halt, rate-limit, or escalate for human review when those thresholds are exceeded. Simple thresholds can be based on the number of invocations; context-aware thresholds can be based on the cumulative value of an input parameter to an extension. Where the application is confined to a specific task or domain, reduce the context window to the minimum needed for that task. Large context windows let agents stitch together historical transactions, prior tool outputs, and unrelated session data into reasoning chains the developer never intended, expanding the surface for both prompt injection and goal drift. A tighter window forces the agent to operate on the immediate request rather than accumulated context, making excessive or unintended actions less likely. 
 
 ### Example Attack Scenarios
 
